@@ -72,33 +72,32 @@ body{background:#fff;padding:20px}
 </div>
 
 <script>
-function loadData() {
-  const defaultCards = [
-    {name:"卡片1",img:"https://picsum.photos/70/70?1",url:"https://www.baidu.com"},
-    {name:"卡片2",img:"https://picsum.photos/70/70?2",url:"https://www.baidu.com"},
-    {name:"卡片3",img:"https://picsum.photos/70/70?3",url:"https://www.baidu.com"},
-    {name:"卡片4",img:"https://picsum.photos/70/70?4",url:"https://www.baidu.com"},
-    {name:"卡片5",img:"https://picsum.photos/70/70?5",url:"https://www.baidu.com"},
-    {name:"卡片6",img:"https://picsum.photos/70/70?6",url:"https://www.baidu.com"},
-    {name:"卡片7",img:"https://picsum.photos/70/70?7",url:"https://www.baidu.com"},
-    {name:"卡片8",img:"https://picsum.photos/70/70?8",url:"https://www.baidu.com"}
-  ];
-  const local = localStorage.getItem("cards");
-  const cards = local ? JSON.parse(local) : defaultCards;
-  const grid = document.getElementById('iconGrid');
-  grid.innerHTML = '';
-  cards.forEach(c => {
-    const item = document.createElement('div');
-    item.className = 'grid-item';
-    // 👇 只加了点击打开链接，样式完全没变
-    item.innerHTML = `
-      <a href="${c.url}" target="_blank" style="text-decoration:none">
-        <img src="${c.img}" alt="${c.name}">
-        <span>${c.name}</span>
-      </a>
-    `;
-    grid.appendChild(item);
-  });
+async function loadData() {
+  try {
+    // 从云端读取数据（所有人都能读到）
+    const res = await fetch("https://api.jsonbin.io/v3/b/67e76c24acd98170561a3811/latest", {
+      headers: { "X-Master-Key": "$2b$10$Qn0Aujc3bM5VhA1H3pZ7UuXtQcK1aG5l7L9J8H6G5F4D3S2A1Q0W" }
+    });
+    const data = await res.json();
+    const cards = data.record || [];
+
+    const grid = document.getElementById('iconGrid');
+    grid.innerHTML = '';
+    cards.forEach(c => {
+      const item = document.createElement('div');
+      item.className = 'grid-item';
+      // 保持你原来的点击跳转样式
+      item.innerHTML = `
+        <a href="${c.url}" target="_blank" style="text-decoration:none">
+          <img src="${c.img}" alt="${c.name}">
+          <span>${c.name}</span>
+        </a>
+      `;
+      grid.appendChild(item);
+    });
+  } catch (e) {
+    console.log("加载失败");
+  }
 }
 loadData();
 </script>
