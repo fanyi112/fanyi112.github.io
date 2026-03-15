@@ -72,19 +72,27 @@ body{background:#fff;padding:20px}
 </div>
 
 <script>
-function loadData() {
-  const defaultCards = [
-    {name:"卡片1",img:"https://picsum.photos/70/70?1"},
-    {name:"卡片2",img:"https://picsum.photos/70/70?2"},
-    {name:"卡片3",img:"https://picsum.photos/70/70?3"},
-    {name:"卡片4",img:"https://picsum.photos/70/70?4"},
-    {name:"卡片5",img:"https://picsum.photos/70/70?5"},
-    {name:"卡片6",img:"https://picsum.photos/70/70?6"},
-    {name:"卡片7",img:"https://picsum.photos/70/70?7"},
-    {name:"卡片8",img:"https://picsum.photos/70/70?8"}
-  ];
-  const local = localStorage.getItem("cards");
-  const cards = local ? JSON.parse(local) : defaultCards;
+async function loadData() {
+  let cards;
+  try {
+    // 优先读取云端数据（所有人都能看到）
+    const res = await fetch("https://api.npoint.io/fa2277a9e1b57d01ca90");
+    cards = await res.json();
+  } catch (e) {
+    // 兜底方案：读不到云端就用本地数据
+    const defaultCards = [
+      {name:"卡片1",img:"https://picsum.photos/70/70?1"},
+      {name:"卡片2",img:"https://picsum.photos/70/70?2"},
+      {name:"卡片3",img:"https://picsum.photos/70/70?3"},
+      {name:"卡片4",img:"https://picsum.photos/70/70?4"},
+      {name:"卡片5",img:"https://picsum.photos/70/70?5"},
+      {name:"卡片6",img:"https://picsum.photos/70/70?6"},
+      {name:"卡片7",img:"https://picsum.photos/70/70?7"},
+      {name:"卡片8",img:"https://picsum.photos/70/70?8"}
+    ];
+    const local = localStorage.getItem("cards");
+    cards = local ? JSON.parse(local) : defaultCards;
+  }
 
   const grid = document.getElementById('iconGrid');
   grid.innerHTML = '';
@@ -95,7 +103,6 @@ function loadData() {
     grid.appendChild(item);
   });
 }
-
 loadData();
 </script>
 </body>
