@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>后台管理</title>
+<style>
+*{box-sizing:border-box;font-family:system-ui}
+body{max-width:400px;margin:30px auto;padding:0 20px}
+h1{text-align:center;font-size:20px}
+input{width:100%;padding:10px;margin:6px 0;border:1px solid #ddd;border-radius:8px}
+button{padding:10px;width:100%;background:#007bff;color:white;border:none;border-radius:8px;margin:6px 0}
+.item{background:white;padding:12px;border-radius:8px;margin:6px 0;box-shadow:0 1px 2px rgba(0,0,0,0.1)}
+.item button{padding:5px 8px;font-size:12px;width:auto}
+.del{background:red}
+.lock{position:fixed;top:0;left:0;width:100%;height:100%;background:white;display:grid;place-items:center}
+</style>
+</head>
+<body>
+
+<div class="lock" id="lock">
+  <div style="text-align:center">
+    <h2>输入密码</h2>
+    <input type="password" id="pwd" placeholder="密码">
+    <button onclick="unlock()">解锁</button>
+  </div>
+</div>
+
+<div id="admin" style="display:none">
+  <h1>后台管理</h1>
+  
+  <input id="name" placeholder="名称">
+  <input id="desc" placeholder="描述">
+  <input id="url" placeholder="链接">
+  
+  <!-- 图片上传区域 -->
+  <input type="file" id="iconUpload" accept="image/*" style="padding:6px;">
+  <button onclick="uploadIcon()">上传图标</button>
+  <input id="img" placeholder="自动生成的图标链接">
+
+  <button onclick="save()">保存</button>
+  <div id="items"></div>
+</div>
+
+<script>
+const PASS = "12200912";
+function unlock(){
+  if(document.getElementById("pwd").value===PASS){
+    document.getElementById("lock").style.display="none";
+    document.getElementById("admin").style.display="block";
+    load();
+  }else{
+    alert("密码错误");
+  }
+}
+
+let cards = JSON.parse(localStorage.getItem("my_cards")) || [
+  {name:"首页",desc:"主页",url:"https://060u.com",img:"https://picsum.photos/64/64"},
+  {name:"游戏",desc:"游戏中心",url:"#",img:"https://picsum.photos/64/64"},
+  {name:"工具",desc:"实用工具",url:"#",img:"https://picsum.photos/64/64"},
+  {name:"影视",desc:"视频",url:"#",img:"https://picsum.photos/64/64"},
+  {name:"音乐",desc:"听歌",url:"#",img:"https://picsum.photos/64/64"},
+  {name:"社区",desc:"交流",url:"#",img:"https://picsum.photos/64/64"}
+];
+
+// 上传图标到图床
+async function uploadIcon() {
+  const file = document.getElementById("iconUpload").files[0];
+  if (!file) {
+    alert("请先选择图片");
+    return;
+  }
+  const formData = new FormData();
+  formData.append("smfile", file);
+
+  try {
+    const res = await fetch("https://sm.ms/api/v2/upload", {
+      method: "POST",
+      body: formData
+    });
+    const data = await res.json();
+    if (data.success) {
+      document.getElementById("img").value = data.data.url;
+      alert("上传成功！");
+    } else {
+      alert("上传失败：" + data.message);
+    }
+  } catch (e) {
+    alert("上传出错，请重试");
+  }
+}
+
+function load(){
+  const items = document.getElementById("items");
+  items.innerHTML = "";
+  cards.forEach((c,i)=>{
+    const div = document.createElement("div");
+    div.className="item";
+    div.innerHTML = `
+      <strong>${c.name}</strong><br>
+      <small>${c.desc}</small><br>
+      <button onclick="edit(${i})">编辑</button>
+      <button class="del" onclick="del(${i})">删除</button>
+    `;
+    items.appendChild(div);
+  })
+}
+
+function save(){
+  const name = document.getElementById("name").value;
+  const desc = document.getElementById("desc").value;
+  const url = document.getElementById("url").value;
+  const img = document.getElementById("img").value;
+  if(!name||!desc||!url)return alert("请填写完整");
+  cards.push({name,desc,url,img});
+  localStorage.setItem("my_cards",JSON.stringify(cards));
+  alert("保存成功！刷新前台即可");
+  load();
+}
+
+function edit(i){}
+function del(i){cards.splice(i,1);localStorage.setItem("my_cards",JSON.stringify(cards));load();}
+</script>
+</body>
+</html>
