@@ -181,7 +181,14 @@ saveBtn.addEventListener('click',()=>{
   }
 
   saveCardsToLocal();
-  alert('保存成功！前台刷新即可看到！');
+
+// 👇 新加：自动同步到云端，别人就能看到
+fetch("https://api.npoint.io/fa2277a9e1b57d01ca90", {
+  method: "POST",
+  body: JSON.stringify(cards)
+});
+
+alert('保存成功！全世界都能看到了！');
 
   document.getElementById('name').value = '';
   document.getElementById('desc').value = '';
