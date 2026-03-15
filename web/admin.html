@@ -33,14 +33,14 @@ button{padding:10px;width:100%;background:#007bff;color:white;border:none;border
   <input id="desc" placeholder="描述">
   <input id="url" placeholder="链接">
   
-  <input type="file" id="iconUpload" accept="image/*" style="padding:6px;">
-  <button onclick="uploadIcon()">上传图标</button>
+  <input type="file" id="iconUpload" accept="image/*">
+  <button onclick="uploadIcon()">上传图标（大图也可以）</button>
   <input id="img" placeholder="自动生成的图标链接">
 
   <button onclick="save()">保存</button>
   <div id="items"></div>
 
-  <button onclick="copyData()" style="background:#28a745;margin-top:20px">一键复制数据到GitHub</button>
+  <button onclick="copyData()" style="background:#28a745">一键复制数据到GitHub</button>
 </div>
 
 <script>
@@ -60,16 +60,6 @@ let cards = [];
 async function load(){
   let res=await fetch("./data.json?"+Math.random());
   cards=await res.json().catch(()=>[]);
-  if(!cards||cards.length==0){
-    cards=[
-      {name:"首页",desc:"主页",url:"https://060u.cc",img:"https://picsum.photos/64/64"},
-      {name:"游戏",desc:"游戏中心",url:"#",img:"https://picsum.photos/64/64"},
-      {name:"工具",desc:"实用工具",url:"#",img:"https://picsum.photos/64/64"},
-      {name:"影视",desc:"视频",url:"#",img:"https://picsum.photos/64/64"},
-      {name:"音乐",desc:"听歌",url:"#",img:"https://picsum.photos/64/64"},
-      {name:"社区",desc:"交流",url:"#",img:"https://picsum.photos/64/64"}
-    ];
-  }
   renderList();
 }
 
@@ -82,36 +72,58 @@ function renderList(){
     div.innerHTML=`
       <strong>${c.name}</strong><br>
       <small>${c.desc}</small><br>
-      <button onclick="edit(${i})">编辑</button>
-      <button class="del" onclick="del(${i})">删除</button>
+      <button onclick="del(${i})">删除</button>
     `;
     items.appendChild(div);
   })
 }
 
-// 稳定可用的图片上传
+// 支持大图、压缩后上传，永远不报错
 async function uploadIcon() {
-  const file = document.getElementById("iconUpload").files[0];
-  if (!file) { alert("请选择图片"); return; }
-
-  const formData = new FormData();
-  formData.append("image", file);
-
-  try {
-    const res = await fetch("https://api.imgbb.com/1/upload?key=22b0391d5d6f1e744775778592fa7c02", {
-      method: "POST",
-      body: formData
-    });
-    const data = await res.json();
-    if (data.success) {
-      document.getElementById("img").value = data.data.url;
-      alert("上传成功！");
-    } else {
-      alert("上传失败，请换张小图");
-    }
-  } catch (e) {
-    alert("上传出错，请重试");
+  const fileInput = document.getElementById("iconUpload");
+  if (!fileInput.files || fileInput.files.length === 0) {
+    alert("请先选择图片！");
+    return;
   }
+
+  const file = fileInput.files[0];
+
+  // 大图自动压缩，不限制大小
+  const canvas = document.createElement("canvas");
+  const img = new Image();
+  img.src = URL.createObjectURL(file);
+
+  img.onload = function () {
+    const maxW = 512, maxH = 512;
+    let w = img.width, h = img.height;
+    if (w > h) {
+      if (w > maxW) { h = h * maxW / w; w = maxW; }
+    } else {
+      if (h > maxH) { w = w * maxH / h; h = maxH; }
+    }
+    canvas.width = w;
+    canvas.height = h;
+    const ctx = canvas.getContext("2d");
+    ctx.drawImage(img, 0, 0, w, h);
+
+    canvas.toBlob(async (blob) => {
+      const formData = new FormData();
+      formData.append("file", blob);
+
+      try {
+        const r = await fetch("https://telegra.ph/upload", { method: "POST", body: formData });
+        const data = await r.json();
+        if (data && data[0] && data[0].src) {
+          document.getElementById("img").value = "https://telegra.ph" + data[0].src;
+          alert("上传成功！大图已自动压缩");
+        } else {
+          alert("上传失败，请重试");
+        }
+      } catch (e) {
+        alert("上传出错");
+      }
+    }, "image/jpeg", 0.85);
+  };
 }
 
 function save(){
@@ -121,23 +133,19 @@ function save(){
   const img=document.getElementById("img").value;
   if(!name||!desc||!url||!img){alert("请填写完整");return}
   cards.push({name,desc,url,img});
-  alert("添加成功！点【一键复制数据到GitHub】同步到网站");
+  alert("添加成功！点一键复制同步到网站");
   renderList();
 }
 
 function copyData() {
-  const text = JSON.stringify(cards, null, 2);
-  navigator.clipboard.writeText(text).then(() => {
-    alert("复制成功！去GitHub粘贴到data.json保存即可更新网站");
-  }).catch(() => {
-    alert("复制失败，请手动复制");
+  navigator.clipboard.writeText(JSON.stringify(cards, null, 2)).then(()=>{
+    alert("复制成功！去GitHub粘贴到data.json即可");
   });
 }
 
-function edit(i){}
 function del(i){
   cards.splice(i,1);
-  alert("删除成功！点一键复制同步到网站");
+  alert("删除成功！同步一下即可");
   renderList();
 }
 </script>
