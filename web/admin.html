@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>后台管理</title>
 <style>
-*{margin:0;padding:0;box-sizing:border-box;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif}
+*{margin:0;padding:0;box-sizing:border-box;font-family:-apple-system,BlinkMacSystemFont,Roboto,sans-serif}
 body{background:#fff;padding:20px}
 h1{text-align:center;font-size:24px;margin-bottom:20px}
 input,.file-input{width:100%;padding:14px 16px;margin-bottom:12px;border:1px solid #e0e0e0;border-radius:10px;font-size:16px}
@@ -51,22 +51,17 @@ input,.file-input{width:100%;padding:14px 16px;margin-bottom:12px;border:1px sol
 let cards = [];
 let editIndex = -1;
 const MAX_SIZE = 5 * 1024 * 1024;
+const BIN_URL = "https://api.jsonbin.io/v3/b/67e80a8cacd98170561b7e46";
+const API_KEY = "$2b$10$RbLdJw0O0H0sZgQaEb3KxeGH91pN9z9X9l7X5Q5w5A5A5A5A5A5A";
 
-function getCards() {
-  const data = localStorage.getItem("cards");
-  return data ? JSON.parse(data) : [
-    {name:"卡片1",desc:"分类1",url:"#",img:"https://picsum.photos/70/70?1"},
-    {name:"卡片2",desc:"分类1",url:"#",img:"https://picsum.photos/70/70?2"}
-  ];
-}
-
-function saveCardsToLocal() {
-  localStorage.setItem("cards", JSON.stringify(cards));
-  renderCards();
-}
-
-function init(){
-  cards = getCards();
+async function loadCards() {
+  try {
+    let res = await fetch(BIN_URL + "/latest");
+    let data = await res.json();
+    cards = data.record || [];
+  } catch (e) {
+    cards = [];
+  }
   renderCards();
 }
 
@@ -114,12 +109,10 @@ document.getElementById('cancelBtn').onclick = function(){
   renderCards();
 };
 
-window.delCard = function(i){
-  if(confirm('确定删除？')){
-    cards.splice(i,1);
-    if(editIndex === i) editIndex = -1;
-    saveCardsToLocal();
-  }
+window.delCard = async function(i){
+  if(!confirm('确定删除？')) return;
+  cards.splice(i,1);
+  await saveToCloud();
 };
 
 const fileInput = document.getElementById('fileInput');
@@ -142,49 +135,41 @@ fileInput.addEventListener('change',()=>{
   reader.readAsDataURL(file);
 });
 
-const uploadBtn = document.getElementById('uploadBtn');
-const imgLink = document.getElementById('imgLink');
-
-uploadBtn.addEventListener('click',()=>{
-  if(!imgPreview.src){
-    alert('请先选择图片！');
-    return;
-  }
-  imgLink.value = imgPreview.src;
+document.getElementById('uploadBtn').onclick = () => {
+  if(!imgPreview.src){ alert('请先选图片！'); return; }
+  document.getElementById('imgLink').value = imgPreview.src;
   alert('上传成功！');
-});
+};
 
-const saveBtn = document.getElementById('saveBtn');
+async function saveToCloud() {
+  await fetch(BIN_URL, {
+    method: "PUT",
+    headers: {
+      "Content-Type": "application/json",
+      "X-Master-Key": API_KEY
+    },
+    body: JSON.stringify(cards)
+  });
+  renderCards();
+}
 
-saveBtn.addEventListener('click',()=>{
+document.getElementById('saveBtn').onclick = async () => {
   const name = document.getElementById('name').value;
   const desc = document.getElementById('desc').value;
   const url = document.getElementById('url').value;
-  const img = imgLink.value;
-  if(!name || !url || !img){
-    alert('请填完整！');
-    return;
-  }
-  const card = {name,desc,url,img};
-  if(editIndex === -1){
-    cards.push(card);
-  }else{
-    cards[editIndex] = card;
-    editIndex = -1;
-    document.getElementById('cancelBtn').style.display = 'none';
-  }
-  saveCardsToLocal();
-  alert('保存成功！前台刷新即可看到！');
-  document.getElementById('name').value = '';
-  document.getElementById('desc').value = '';
-  document.getElementById('url').value = '';
-  fileInput.value = '';
-  fileName.textContent = '未选择文件';
-  imgPreview.style.display = 'none';
-  imgLink.value = '';
-});
+  const img = document.getElementById('imgLink').value;
+  if(!name || !url || !img){ alert('请填完整！'); return; }
 
-init();
+  const card = {name, desc, url, img};
+  if(editIndex === -1) cards.push(card);
+  else { cards[editIndex] = card; editIndex = -1; }
+
+  await saveToCloud();
+  alert("保存成功！全世界都能看到并点击！");
+  document.getElementById('cancelBtn').click();
+};
+
+loadCards();
 </script>
 </body>
 </html>
