@@ -13,10 +13,10 @@ body{background:#fff;padding-bottom:60px}
 .welcome-bar .text{color:#333;font-size:16px}
 .invite-btn{display:flex;align-items:center;justify-content:flex-end;margin:15px}
 .invite-btn .avatar{width:40px;height:40px;background:#425a70;border-radius:8px;position:relative}
-.invite-btn .add{position:absolute;right:-5px;bottom:-5px;width:20px;height:20px;background:#4080ff;color:#fff;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:14px}
+.invite-btn .add{position:absolute;right:-5px;bottom:-5px;width:20px;height:20px;background:#4080ff;color:#fff;border-radius:50%;display:grid;place-items:center;font-size:14px}
 .invite-btn .label{margin-left:8px;color:#333;font-size:14px}
 .category-title{display:flex;align-items:center;margin:20px 15px 10px;font-size:18px;color:#333}
-.category-title .icon{width:24px;height:24px;background:#4080ff;color:#fff;border-radius:4px;display:flex;align-items:center;justify-content:center;margin-right:8px}
+.category-title .icon{width:24px;height:24px;background:#4080ff;color:#fff;border-radius:4px;display:grid;place-items:center;margin-right:8px}
 .category-title .more{margin-left:auto;color:#666;font-size:14px}
 .game-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;padding:0 15px}
 .game-card{background:#fff;border:1px solid #e5e7eb;border-radius:8px;padding:10px;position:relative}
@@ -68,15 +68,7 @@ body{background:#fff;padding-bottom:60px}
 </div>
 
 <script>
-let defaultCards = [
-  {name:"首页", desc:"主页", url:"https://060u.cc", img:"https://picsum.photos/40/40"},
-  {name:"游戏", desc:"游戏中心", url:"#", img:"https://picsum.photos/40/40"},
-  {name:"工具", desc:"实用工具", url:"#", img:"https://picsum.photos/40/40"},
-  {name:"影视", desc:"视频", url:"#", img:"https://picsum.photos/40/40"},
-  {name:"音乐", desc:"听歌", url:"#", img:"https://picsum.photos/40/40"},
-  {name:"社区", desc:"交流", url:"#", img:"https://picsum.photos/40/40"},
-];
-let cards = JSON.parse(localStorage.getItem("my_cards")) || defaultCards;
+let cards = [];
 
 function render(){
   let html = "";
@@ -92,7 +84,25 @@ function render(){
   });
   document.getElementById("card-container").innerHTML = html;
 }
-render();
+
+// 从 data.json 读取数据（所有人都能看到）
+fetch("./data.json?"+Math.random())
+.then(res=>res.json())
+.then(data=>{
+  cards=data;
+  render();
+})
+.catch(()=>{
+  cards=[
+    {name:"首页",desc:"主页",url:"https://060u.cc",img:"https://picsum.photos/40/40"},
+    {name:"游戏",desc:"游戏中心",url:"#",img:"https://picsum.photos/40/40"},
+    {name:"工具",desc:"实用工具",url:"#",img:"https://picsum.photos/40/40"},
+    {name:"影视",desc:"视频",url:"#",img:"https://picsum.photos/40/40"},
+    {name:"音乐",desc:"听歌",url:"#",img:"https://picsum.photos/40/40"},
+    {name:"社区",desc:"交流",url:"#",img:"https://picsum.photos/40/40"}
+  ];
+  render();
+})
 </script>
 
 </body>
