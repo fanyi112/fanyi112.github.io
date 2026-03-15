@@ -52,21 +52,19 @@ let cards = [];
 let editIndex = -1;
 const MAX_SIZE = 5 * 1024 * 1024;
 
-function getCards() {
-  const data = localStorage.getItem("cards");
-  return data ? JSON.parse(data) : [
-    {name:"卡片1",desc:"分类1",url:"#",img:"https://picsum.photos/70/70?1"},
-    {name:"卡片2",desc:"分类1",url:"#",img:"https://picsum.photos/70/70?2"}
-  ];
-}
-
-function saveCardsToLocal() {
-  localStorage.setItem("cards", JSON.stringify(cards));
-  renderCards();
-}
-
-function init(){
-  cards = getCards();
+async function loadCards() {
+  try {
+    let res = await fetch("https://api.jsonbin.io/v3/b/67e76c24acd98170561a3811/latest", {
+      headers: { "X-Master-Key": "$2b$10$Qn0Aujc3bM5VhA1H3pZ7UuXtQcK1aG5l7L9J8H6G5F4D3S2A1Q0W" }
+    });
+    let data = await res.json();
+    cards = data.record || [];
+  } catch (e) {
+    cards = [
+      {name:"卡片1",desc:"分类1",url:"#",img:"https://picsum.photos/70/70?1"},
+      {name:"卡片2",desc:"分类1",url:"#",img:"https://picsum.photos/70/70?2"}
+    ];
+  }
   renderCards();
 }
 
@@ -114,12 +112,10 @@ document.getElementById('cancelBtn').onclick = function(){
   renderCards();
 };
 
-window.delCard = function(i){
-  if(confirm('确定删除？')){
-    cards.splice(i,1);
-    if(editIndex === i) editIndex = -1;
-    saveCardsToLocal();
-  }
+window.delCard = async function(i){
+  if(!confirm('确定删除？')) return;
+  cards.splice(i,1);
+  await saveToCloud();
 };
 
 const fileInput = document.getElementById('fileInput');
@@ -129,7 +125,6 @@ const imgPreview = document.getElementById('imgPreview');
 fileInput.addEventListener('change',()=>{
   const file = fileInput.files[0];
   if(!file) return;
-
   if(file.size > MAX_SIZE){
     alert('图片太大，请上传 ≤5MB 的图片！');
     fileInput.value = '';
@@ -137,69 +132,47 @@ fileInput.addEventListener('change',()=>{
     imgPreview.style.display = 'none';
     return;
   }
-
   fileName.textContent = file.name;
   const reader = new FileReader();
-  reader.onload = e => {
-    imgPreview.src = e.target.result;
-    imgPreview.style.display = 'inline-block';
-  };
+  reader.onload = e => { imgPreview.src = e.target.result; imgPreview.style.display = 'inline-block'; };
   reader.readAsDataURL(file);
 });
 
-const uploadBtn = document.getElementById('uploadBtn');
-const imgLink = document.getElementById('imgLink');
-
-uploadBtn.addEventListener('click',()=>{
-  if(!imgPreview.src){
-    alert('请先选择图片！');
-    return;
-  }
-  imgLink.value = imgPreview.src;
+document.getElementById('uploadBtn').onclick = () => {
+  if(!imgPreview.src){ alert('请先选图片！'); return; }
+  document.getElementById('imgLink').value = imgPreview.src;
   alert('上传成功！');
-});
+};
 
-const saveBtn = document.getElementById('saveBtn');
-saveBtn.addEventListener('click',()=>{
+async function saveToCloud() {
+  await fetch("https://api.jsonbin.io/v3/b/67e76c24acd98170561a3811", {
+    method: "PUT",
+    headers: {
+      "Content-Type": "application/json",
+      "X-Master-Key": "$2b$10$Qn0Aujc3bM5VhA1H3pZ7UuXtQcK1aG5l7L9J8H6G5F4D3S2A1Q0W"
+    },
+    body: JSON.stringify(cards)
+  });
+  renderCards();
+}
+
+document.getElementById('saveBtn').onclick = async () => {
   const name = document.getElementById('name').value;
   const desc = document.getElementById('desc').value;
   const url = document.getElementById('url').value;
-  const img = imgLink.value;
+  const img = document.getElementById('imgLink').value;
+  if(!name || !url || !img){ alert('请填完整！'); return; }
 
-  if(!name || !url || !img){
-    alert('请填完整！');
-    return;
-  }
+  const card = {name, desc, url, img};
+  if(editIndex === -1) cards.push(card);
+  else { cards[editIndex] = card; editIndex = -1; }
 
-  const card = {name,desc,url,img};
-  if(editIndex === -1){
-    cards.push(card);
-  }else{
-    cards[editIndex] = card;
-    editIndex = -1;
-    document.getElementById('cancelBtn').style.display = 'none';
-  }
+  await saveToCloud();
+  alert("保存成功！全世界都能看到并点击了！");
+  document.getElementById('cancelBtn').click();
+};
 
-  saveCardsToLocal();
-
-// 👇 新加：自动同步到云端，别人就能看到
-fetch("https://api.npoint.io/fa2277a9e1b57d01ca90", {
-  method: "POST",
-  body: JSON.stringify(cards)
-});
-
-alert('保存成功！全世界都能看到了！');
-
-  document.getElementById('name').value = '';
-  document.getElementById('desc').value = '';
-  document.getElementById('url').value = '';
-  fileInput.value = '';
-  fileName.textContent = '未选择文件';
-  imgPreview.style.display = 'none';
-  imgLink.value = '';
-});
-
-init();
+loadCards();
 </script>
 </body>
 </html>
