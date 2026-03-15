@@ -33,7 +33,6 @@ button{padding:10px;width:100%;background:#007bff;color:white;border:none;border
   <input id="desc" placeholder="描述">
   <input id="url" placeholder="链接">
   
-  <!-- 图片上传区域 -->
   <input type="file" id="iconUpload" accept="image/*" style="padding:6px;">
   <button onclick="uploadIcon()">上传图标</button>
   <input id="img" placeholder="自动生成的图标链接">
@@ -54,49 +53,31 @@ function unlock(){
   }
 }
 
-let cards = JSON.parse(localStorage.getItem("my_cards")) || [
-  {name:"首页",desc:"主页",url:"https://060u.com",img:"https://picsum.photos/64/64"},
-  {name:"游戏",desc:"游戏中心",url:"#",img:"https://picsum.photos/64/64"},
-  {name:"工具",desc:"实用工具",url:"#",img:"https://picsum.photos/64/64"},
-  {name:"影视",desc:"视频",url:"#",img:"https://picsum.photos/64/64"},
-  {name:"音乐",desc:"听歌",url:"#",img:"https://picsum.photos/64/64"},
-  {name:"社区",desc:"交流",url:"#",img:"https://picsum.photos/64/64"}
-];
+let cards = [];
 
-// 上传图标到图床
-async function uploadIcon() {
-  const file = document.getElementById("iconUpload").files[0];
-  if (!file) {
-    alert("请先选择图片");
-    return;
+async function load(){
+  let res=await fetch("./data.json?"+Math.random());
+  cards=await res.json().catch(()=>[]);
+  if(!cards||cards.length==0){
+    cards=[
+      {name:"首页",desc:"主页",url:"https://060u.com",img:"https://picsum.photos/64/64"},
+      {name:"游戏",desc:"游戏中心",url:"#",img:"https://picsum.photos/64/64"},
+      {name:"工具",desc:"实用工具",url:"#",img:"https://picsum.photos/64/64"},
+      {name:"影视",desc:"视频",url:"#",img:"https://picsum.photos/64/64"},
+      {name:"音乐",desc:"听歌",url:"#",img:"https://picsum.photos/64/64"},
+      {name:"社区",desc:"交流",url:"#",img:"https://picsum.photos/64/64"}
+    ];
   }
-  const formData = new FormData();
-  formData.append("smfile", file);
-
-  try {
-    const res = await fetch("https://sm.ms/api/v2/upload", {
-      method: "POST",
-      body: formData
-    });
-    const data = await res.json();
-    if (data.success) {
-      document.getElementById("img").value = data.data.url;
-      alert("上传成功！");
-    } else {
-      alert("上传失败：" + data.message);
-    }
-  } catch (e) {
-    alert("上传出错，请重试");
-  }
+  renderList();
 }
 
-function load(){
-  const items = document.getElementById("items");
-  items.innerHTML = "";
+function renderList(){
+  const items=document.getElementById("items");
+  items.innerHTML="";
   cards.forEach((c,i)=>{
-    const div = document.createElement("div");
+    const div=document.createElement("div");
     div.className="item";
-    div.innerHTML = `
+    div.innerHTML=`
       <strong>${c.name}</strong><br>
       <small>${c.desc}</small><br>
       <button onclick="edit(${i})">编辑</button>
@@ -106,20 +87,42 @@ function load(){
   })
 }
 
+async function uploadIcon() {
+  const file=document.getElementById("iconUpload").files[0];
+  if(!file){alert("请先选择图片");return}
+  const formData=new FormData();
+  formData.append("smfile",file);
+  try{
+    const res=await fetch("https://sm.ms/api/v2/upload",{method:"POST",body:formData});
+    const data=await res.json();
+    if(data.success){
+      document.getElementById("img").value=data.data.url;
+      alert("上传成功！");
+    }else{
+      alert("上传失败："+data.message);
+    }
+  }catch(e){
+    alert("上传出错，请重试");
+  }
+}
+
 function save(){
-  const name = document.getElementById("name").value;
-  const desc = document.getElementById("desc").value;
-  const url = document.getElementById("url").value;
-  const img = document.getElementById("img").value;
-  if(!name||!desc||!url)return alert("请填写完整");
+  const name=document.getElementById("name").value;
+  const desc=document.getElementById("desc").value;
+  const url=document.getElementById("url").value;
+  const img=document.getElementById("img").value;
+  if(!name||!desc||!url||!img){alert("请填写完整");return}
   cards.push({name,desc,url,img});
-  localStorage.setItem("my_cards",JSON.stringify(cards));
-  alert("保存成功！刷新前台即可");
-  load();
+  alert("保存成功！请手动更新 GitHub 上的 data.json 文件，其他人才能看到！");
+  renderList();
 }
 
 function edit(i){}
-function del(i){cards.splice(i,1);localStorage.setItem("my_cards",JSON.stringify(cards));load();}
+function del(i){
+  cards.splice(i,1);
+  alert("删除成功！请手动更新 GitHub 上的 data.json 文件，其他人才能看到！");
+  renderList();
+}
 </script>
 </body>
 </html>
