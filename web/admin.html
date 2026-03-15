@@ -3,176 +3,56 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>后台管理</title>
+<title>后台</title>
 <style>
 *{box-sizing:border-box;font-family:system-ui}
 body{max-width:400px;margin:30px auto;padding:0 20px}
-h1{text-align:center;font-size:20px}
 input{width:100%;padding:10px;margin:6px 0;border:1px solid #ddd;border-radius:8px}
-button{padding:10px;width:100%;background:#007bff;color:white;border:none;border-radius:8px;margin:6px 0}
-.item{background:white;padding:12px;border-radius:8px;margin:6px 0;box-shadow:0 1px 2px rgba(0,0,0,0.1)}
-.item button{padding:5px 8px;font-size:12px;width:auto}
-.del{background:red}
-.lock{position:fixed;top:0;left:0;width:100%;height:100%;background:white;display:grid;place-items:center}
-.status{text-align:center;color:#28a745;margin:10px 0}
+button{padding:10px;width:100%;background:#007AFF;color:white;border:none;border-radius:8px;margin:6px 0}
+.item{background:white;padding:12px;border-radius:8px;margin:6px 0}
+.del{background:#ff3b30}
 </style>
 </head>
 <body>
+<h2>后台管理</h2>
 
-<div class="lock" id="lock">
-  <div style="text-align:center">
-    <h2>输入密码</h2>
-    <input type="password" id="pwd" placeholder="密码">
-    <button onclick="unlock()">解锁</button>
-  </div>
-</div>
+<input id="name" placeholder="名称">
+<input id="url" placeholder="链接">
+<input id="img" placeholder="图标链接">
 
-<div id="admin" style="display:none">
-  <h1>后台管理</h1>
-  
-  <input id="name" placeholder="名称">
-  <input id="desc" placeholder="描述">
-  <input id="url" placeholder="链接">
-  
-  <input type="file" id="iconUpload" accept="image/*">
-  <button onclick="uploadIcon()">上传图标</button>
-  <input id="img" placeholder="自动生成的图标链接">
-
-  <button onclick="saveAndSync()">保存并同步到网站</button>
-  <div class="status" id="status"></div>
-  <div id="items"></div>
-</div>
+<button onclick="save()">保存并立即显示</button>
+<div id="items"></div>
 
 <script>
-const PASS = "12200912";
-const GIST_ID = "d4a1b2c3e4f5a6b7c8d9e0f1a2b3c4d5";
-const GIST_TOKEN = "ghp_abcdefghijklmnopqrstuvwxyzABCDEFGHIJK";
+let data = JSON.parse(localStorage.getItem('navData') || '[]');
+render();
 
-function unlock(){
-  if(document.getElementById("pwd").value===PASS){
-    document.getElementById("lock").style.display="none";
-    document.getElementById("admin").style.display="block";
-    loadData();
-  }else{
-    alert("密码错误");
-  }
+function render(){
+  let dom = document.getElementById('items');
+  dom.innerHTML = '';
+  data.forEach((item,i)=>{
+    let div = document.createElement('div');
+    div.className='item';
+    div.innerHTML = `<strong>${item.name}</strong><br><button class="del" onclick="del(${i})">删除</button>`;
+    dom.appendChild(div);
+  });
 }
 
-let cards = [];
-
-async function loadData(){
-  try {
-    const res = await fetch(`https://api.github.com/gists/${GIST_ID}`);
-    const data = await res.json();
-    cards = JSON.parse(data.files["data.json"].content);
-    renderList();
-  } catch(e) {
-    cards = [
-      {name:"首页",desc:"主页",url:"#",img:"https://picsum.photos/64/64?random=1"},
-      {name:"游戏",desc:"游戏中心",url:"#",img:"https://picsum.photos/64/64?random=2"},
-      {name:"工具",desc:"实用工具",url:"#",img:"https://picsum.photos/64/64?random=3"},
-      {name:"影视",desc:"视频",url:"#",img:"https://picsum.photos/64/64?random=4"},
-      {name:"音乐",desc:"听歌",url:"#",img:"https://picsum.photos/64/64?random=5"},
-      {name:"社区",desc:"交流",url:"#",img:"https://picsum.photos/64/64?random=6"}
-    ];
-    renderList();
-  }
-}
-
-function renderList(){
-  const items=document.getElementById("items");
-  items.innerHTML="";
-  cards.forEach((c,i)=>{
-    const div=document.createElement("div");
-    div.className="item";
-    div.innerHTML=`
-      <strong>${c.name}</strong><br>
-      <small>${c.desc}</small><br>
-      <button class="del" onclick="del(${i})">删除</button>
-    `;
-    items.appendChild(div);
-  })
-}
-
-async function uploadIcon() {
-  const fileInput = document.getElementById("iconUpload");
-  if (!fileInput.files || fileInput.files.length === 0) {
-    alert("请先选择图片！");
-    return;
-  }
-
-  const file = fileInput.files[0];
-  const canvas = document.createElement("canvas");
-  const img = new Image();
-  img.src = URL.createObjectURL(file);
-
-  img.onload = function () {
-    const max = 256;
-    let w = img.width, h = img.height;
-    if (w > h) {
-      h = h * max / w; w = max;
-    } else {
-      w = w * max / h; h = max;
-    }
-    canvas.width = w;
-    canvas.height = h;
-    const ctx = canvas.getContext("2d");
-    ctx.drawImage(img, 0, 0, w, h);
-
-    canvas.toBlob(async (blob) => {
-      const formData = new FormData();
-      formData.append("file", blob);
-      try {
-        const r = await fetch("https://telegra.ph/upload", { method: "POST", body: formData });
-        const data = await r.json();
-        if (data && data[0] && data[0].src) {
-          document.getElementById("img").value = "https://telegra.ph" + data[0].src;
-          alert("上传成功！");
-        } else {
-          alert("上传失败，请换张小图");
-        }
-      } catch (e) {
-        alert("上传出错，请重试");
-      }
-    }, "image/jpeg", 0.85);
-  };
-}
-
-async function saveAndSync(){
-  const name=document.getElementById("name").value;
-  const desc=document.getElementById("desc").value;
-  const url=document.getElementById("url").value;
-  const img=document.getElementById("img").value;
-  if(!name||!desc||!url||!img){alert("请填写完整");return}
-  
-  cards.push({name,desc,url,img});
-  document.getElementById("status").textContent = "正在同步到网站...";
-  
-  try {
-    await fetch(`https://api.github.com/gists/${GIST_ID}`, {
-      method: "PATCH",
-      headers: {
-        "Authorization": `token ${GIST_TOKEN}`,
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({
-        files: {
-          "data.json": {
-            content: JSON.stringify(cards, null, 2)
-          }
-        }
-      })
-    });
-    document.getElementById("status").textContent = "同步成功！网站已更新";
-    renderList();
-  } catch(e) {
-    document.getElementById("status").textContent = "同步失败，请重试";
-  }
+function save(){
+  let name = document.getElementById('name').value;
+  let url  = document.getElementById('url').value;
+  let img  = document.getElementById('img').value;
+  if(!name||!url||!img) return alert('请填完整');
+  data.push({name,url,img});
+  localStorage.setItem('navData',JSON.stringify(data));
+  render();
+  alert('保存成功！前台刷新就显示！');
 }
 
 function del(i){
-  cards.splice(i,1);
-  renderList();
+  data.splice(i,1);
+  localStorage.setItem('navData',JSON.stringify(data));
+  render();
 }
 </script>
 </body>
