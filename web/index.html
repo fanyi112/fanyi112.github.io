@@ -74,7 +74,7 @@ body{background:#fff;padding:20px}
 <script>
 async function loadData(){
 try{
-const res=await fetch('https://raw.githubusercontent.com/fanyi112/fanyi112.github.io/main/网络/data.json');
+const res=await fetch('data.json');
 const cards=await res.json();
 const grid=document.getElementById('iconGrid');
 grid.innerHTML='';
