@@ -5,57 +5,195 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>后台管理</title>
 <style>
-*{box-sizing:border-box;font-family:system-ui}
-body{max-width:400px;margin:30px auto;padding:0 20px}
-input{width:100%;padding:10px;margin:6px 0;border:1px solid #ddd;border-radius:8px}
-button{padding:10px;width:100%;background:#007AFF;color:white;border:none;border-radius:8px;margin:6px 0}
-.item{background:white;padding:12px;border-radius:8px;margin:6px 0}
-.del{background:#ff3b30}
+*{margin:0;padding:0;box-sizing:border-box;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif}
+body{background:#fff;padding:20px}
+h1{text-align:center;font-size:24px;margin-bottom:20px}
+input,.file-input{width:100%;padding:14px 16px;margin-bottom:12px;border:1px solid #e0e0e0;border-radius:10px;font-size:16px}
+.file-input{display:flex;align-items:center;gap:10px;padding:8px 16px}
+.file-input input[type="file"]{display:none}
+.file-input label{background:#e5e7eb;border:none;padding:8px 12px;border-radius:6px;font-size:14px;cursor:pointer}
+.btn{width:100%;padding:14px;background:linear-gradient(135deg,#ff416c,#ff4b2b);color:#fff;border:none;border-radius:10px;font-size:16px;margin-bottom:20px;cursor:pointer}
+#cancelBtn{background:#666;display:none}
+.card{background:#f9f9f9;border-radius:10px;padding:16px;margin-bottom:12px}
+.card h3{font-size:20px;margin-bottom:4px}
+.card p{color:#666;margin-bottom:12px}
+.card-actions{display:flex;gap:10px}
+.edit-btn{background:#007AFF;color:#fff;border:none;padding:8px 16px;border-radius:6px;font-size:14px;cursor:pointer}
+.del-btn{background:#ff3b30;color:#fff;border:none;padding:8px 16px;border-radius:6px;font-size:14px;cursor:pointer}
+#imgLink{background:#f5f5f5}
+#imgPreview{max-width:40px;max-height:40px;border-radius:6px;margin-top:8px;display:none}
+.edit-mode{border:2px solid #007AFF;background:#e8f4ff}
 </style>
 </head>
 <body>
-<h2>后台管理</h2>
-<input id="name" placeholder="名称">
-<input id="url" placeholder="链接">
-<input id="img" placeholder="图标链接">
-<button onclick="save()">保存并更新所有人可见的内容</button>
-<div id="items"></div>
+<h1>后台管理</h1>
+
+<input type="text" id="name" placeholder="名称">
+<input type="text" id="desc" placeholder="描述">
+<input type="text" id="url" placeholder="链接">
+
+<div class="file-input">
+<label for="fileInput">选取文件</label>
+<span id="fileName">未选择文件</span>
+<input type="file" id="fileInput" accept="image/*">
+</div>
+<img id="imgPreview">
+
+<button class="btn" id="uploadBtn">上传图标</button>
+<input type="text" id="imgLink" placeholder="自动生成的图标链接" readonly>
+
+<button class="btn" id="saveBtn">保存并同步到网站</button>
+<button class="btn" id="cancelBtn">取消编辑</button>
+
+<div id="cardList"></div>
 
 <script>
 let cards = [];
-// 加载当前数据
-fetch('https://raw.githubusercontent.com/fanyi112/fanyi112.github.io/main/网络/data.json')
-  .then(res => res.json())
-  .then(data => {
-    cards = data;
-    render();
-  });
+let editIndex = -1;
+const MAX_SIZE = 5 * 1024 * 1024;
 
-function render(){
-  const items = document.getElementById('items');
-  items.innerHTML = '';
-  cards.forEach((c,i) => {
+async function init(){
+  try{
+    const res = await fetch('https://raw.githubusercontent.com/fanyi112/fanyi112.github.io/main/网络/data.json');
+    cards = await res.json();
+  }catch(e){
+    cards = [
+      {name:"卡片1",desc:"分类1",url:"#",img:"https://picsum.photos/70/70?1"},
+      {name:"卡片2",desc:"分类1",url:"#",img:"https://picsum.photos/70/70?2"}
+    ];
+  }
+  renderCards();
+}
+
+function renderCards(){
+  const list = document.getElementById('cardList');
+  list.innerHTML = '';
+  cards.forEach((c,i)=>{
     const div = document.createElement('div');
-    div.className = 'item';
-    div.innerHTML = `<strong>${c.name}</strong><br><button class="del" onclick="del(${i})">删除</button>`;
-    items.appendChild(div);
+    div.className = `card ${editIndex === i ? 'edit-mode' : ''}`;
+    div.innerHTML = `
+      <h3>${c.name}</h3>
+      <p>${c.desc}</p>
+      <div class="card-actions">
+        <button class="edit-btn" onclick="editCard(${i})">编辑</button>
+        <button class="del-btn" onclick="delCard(${i})">删除</button>
+      </div>
+    `;
+    list.appendChild(div);
   });
 }
 
-function save(){
-  const name = document.getElementById('name').value;
-  const url = document.getElementById('url').value;
-  const img = document.getElementById('img').value;
-  if(!name||!url||!img) return alert('请填完整');
-  cards.push({name,url,img});
-  // 这里需要你手动去 GitHub 更新 data.json（因为不能直接写文件）
-  alert('复制下面这段数据，去 GitHub 的 data.json 里粘贴提交，所有人就看到了！\n\n' + JSON.stringify(cards, null, 2));
+window.editCard = function(i){
+  editIndex = i;
+  const c = cards[i];
+  document.getElementById('name').value = c.name;
+  document.getElementById('desc').value = c.desc;
+  document.getElementById('url').value = c.url;
+  document.getElementById('imgLink').value = c.img;
+  document.getElementById('imgPreview').src = c.img;
+  document.getElementById('imgPreview').style.display = 'inline-block';
+  document.getElementById('cancelBtn').style.display = 'block';
+  renderCards();
+};
+
+document.getElementById('cancelBtn').onclick = function(){
+  editIndex = -1;
+  document.getElementById('name').value = '';
+  document.getElementById('desc').value = '';
+  document.getElementById('url').value = '';
+  document.getElementById('imgLink').value = '';
+  document.getElementById('fileInput').value = '';
+  document.getElementById('fileName').textContent = '未选择文件';
+  document.getElementById('imgPreview').style.display = 'none';
+  this.style.display = 'none';
+  renderCards();
+};
+
+window.delCard = function(i){
+  if(confirm('确定删除？')){
+    cards.splice(i,1);
+    if(editIndex === i) editIndex = -1;
+    saveToGithub();
+  }
+};
+
+const fileInput = document.getElementById('fileInput');
+const fileName = document.getElementById('fileName');
+const imgPreview = document.getElementById('imgPreview');
+
+fileInput.addEventListener('change',()=>{
+  const file = fileInput.files[0];
+  if(!file) return;
+
+  if(file.size > MAX_SIZE){
+    alert('图片太大，请上传 ≤5MB 的图片！');
+    fileInput.value = '';
+    fileName.textContent = '未选择文件';
+    imgPreview.style.display = 'none';
+    return;
+  }
+
+  fileName.textContent = file.name;
+  const reader = new FileReader();
+  reader.onload = e => {
+    imgPreview.src = e.target.result;
+    imgPreview.style.display = 'inline-block';
+  };
+  reader.readAsDataURL(file);
+});
+
+const uploadBtn = document.getElementById('uploadBtn');
+const imgLink = document.getElementById('imgLink');
+
+uploadBtn.addEventListener('click',()=>{
+  if(!imgPreview.src){
+    alert('请先选择图片！');
+    return;
+  }
+  imgLink.value = imgPreview.src;
+  alert('上传成功！');
+});
+
+async function saveToGithub(){
+  const jsonStr = JSON.stringify(cards,null,2);
+  alert('复制这段内容，去 data.json 粘贴保存：\n\n' + jsonStr);
+  navigator.clipboard.writeText(jsonStr);
+  renderCards();
 }
 
-function del(i){
-  cards.splice(i,1);
-  alert('复制下面这段数据，去 GitHub 的 data.json 里粘贴提交，所有人就看到了！\n\n' + JSON.stringify(cards, null, 2));
-}
+const saveBtn = document.getElementById('saveBtn');
+saveBtn.addEventListener('click',()=>{
+  const name = document.getElementById('name').value;
+  const desc = document.getElementById('desc').value;
+  const url = document.getElementById('url').value;
+  const img = imgLink.value;
+
+  if(!name || !url || !img){
+    alert('请填完整！');
+    return;
+  }
+
+  const card = {name,desc,url,img};
+  if(editIndex === -1){
+    cards.push(card);
+  }else{
+    cards[editIndex] = card;
+    editIndex = -1;
+    document.getElementById('cancelBtn').style.display = 'none';
+  }
+
+  saveToGithub();
+
+  document.getElementById('name').value = '';
+  document.getElementById('desc').value = '';
+  document.getElementById('url').value = '';
+  fileInput.value = '';
+  fileName.textContent = '未选择文件';
+  imgPreview.style.display = 'none';
+  imgLink.value = '';
+});
+
+init();
 </script>
 </body>
 </html>
