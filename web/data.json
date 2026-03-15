@@ -1,1 +1,8 @@
-[]
+[
+  {"name":"首页","desc":"主页","url":"https://060u.cc","img":"https://picsum.photos/40/40"},
+  {"name":"游戏","desc":"游戏中心","url":"#","img":"https://picsum.photos/40/40"},
+  {"name":"工具","desc":"实用工具","url":"#","img":"https://picsum.photos/40/40"},
+  {"name":"影视","desc":"视频","url":"#","img":"https://picsum.photos/40/40"},
+  {"name":"音乐","desc":"听歌","url":"#","img":"https://picsum.photos/40/40"},
+  {"name":"社区","desc":"交流","url":"#","img":"https://picsum.photos/40/40"}
+]
