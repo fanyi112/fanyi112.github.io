@@ -39,6 +39,8 @@ button{padding:10px;width:100%;background:#007bff;color:white;border:none;border
 
   <button onclick="save()">保存</button>
   <div id="items"></div>
+
+  <button onclick="copyData()" style="background:#28a745;margin-top:20px">一键复制数据到GitHub</button>
 </div>
 
 <script>
@@ -60,7 +62,7 @@ async function load(){
   cards=await res.json().catch(()=>[]);
   if(!cards||cards.length==0){
     cards=[
-      {name:"首页",desc:"主页",url:"https://060u.com",img:"https://picsum.photos/64/64"},
+      {name:"首页",desc:"主页",url:"https://060u.cc",img:"https://picsum.photos/64/64"},
       {name:"游戏",desc:"游戏中心",url:"#",img:"https://picsum.photos/64/64"},
       {name:"工具",desc:"实用工具",url:"#",img:"https://picsum.photos/64/64"},
       {name:"影视",desc:"视频",url:"#",img:"https://picsum.photos/64/64"},
@@ -87,21 +89,27 @@ function renderList(){
   })
 }
 
+// 稳定可用的图片上传
 async function uploadIcon() {
-  const file=document.getElementById("iconUpload").files[0];
-  if(!file){alert("请先选择图片");return}
-  const formData=new FormData();
-  formData.append("smfile",file);
-  try{
-    const res=await fetch("https://sm.ms/api/v2/upload",{method:"POST",body:formData});
-    const data=await res.json();
-    if(data.success){
-      document.getElementById("img").value=data.data.url;
+  const file = document.getElementById("iconUpload").files[0];
+  if (!file) { alert("请选择图片"); return; }
+
+  const formData = new FormData();
+  formData.append("image", file);
+
+  try {
+    const res = await fetch("https://api.imgbb.com/1/upload?key=22b0391d5d6f1e744775778592fa7c02", {
+      method: "POST",
+      body: formData
+    });
+    const data = await res.json();
+    if (data.success) {
+      document.getElementById("img").value = data.data.url;
       alert("上传成功！");
-    }else{
-      alert("上传失败："+data.message);
+    } else {
+      alert("上传失败，请换张小图");
     }
-  }catch(e){
+  } catch (e) {
     alert("上传出错，请重试");
   }
 }
@@ -113,14 +121,23 @@ function save(){
   const img=document.getElementById("img").value;
   if(!name||!desc||!url||!img){alert("请填写完整");return}
   cards.push({name,desc,url,img});
-  alert("保存成功！请手动更新 GitHub 上的 data.json 文件，其他人才能看到！");
+  alert("添加成功！点【一键复制数据到GitHub】同步到网站");
   renderList();
+}
+
+function copyData() {
+  const text = JSON.stringify(cards, null, 2);
+  navigator.clipboard.writeText(text).then(() => {
+    alert("复制成功！去GitHub粘贴到data.json保存即可更新网站");
+  }).catch(() => {
+    alert("复制失败，请手动复制");
+  });
 }
 
 function edit(i){}
 function del(i){
   cards.splice(i,1);
-  alert("删除成功！请手动更新 GitHub 上的 data.json 文件，其他人才能看到！");
+  alert("删除成功！点一键复制同步到网站");
   renderList();
 }
 </script>
