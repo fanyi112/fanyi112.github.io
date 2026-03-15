@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>后台</title>
+<title>后台管理</title>
 <style>
 *{box-sizing:border-box;font-family:system-ui}
 body{max-width:400px;margin:30px auto;padding:0 20px}
@@ -15,44 +15,46 @@ button{padding:10px;width:100%;background:#007AFF;color:white;border:none;border
 </head>
 <body>
 <h2>后台管理</h2>
-
 <input id="name" placeholder="名称">
 <input id="url" placeholder="链接">
 <input id="img" placeholder="图标链接">
-
-<button onclick="save()">保存并立即显示</button>
+<button onclick="save()">保存并更新所有人可见的内容</button>
 <div id="items"></div>
 
 <script>
-let data = JSON.parse(localStorage.getItem('navData') || '[]');
-render();
+let cards = [];
+// 加载当前数据
+fetch('https://raw.githubusercontent.com/fanyi112/fanyi112.github.io/main/网络/data.json')
+  .then(res => res.json())
+  .then(data => {
+    cards = data;
+    render();
+  });
 
 function render(){
-  let dom = document.getElementById('items');
-  dom.innerHTML = '';
-  data.forEach((item,i)=>{
-    let div = document.createElement('div');
-    div.className='item';
-    div.innerHTML = `<strong>${item.name}</strong><br><button class="del" onclick="del(${i})">删除</button>`;
-    dom.appendChild(div);
+  const items = document.getElementById('items');
+  items.innerHTML = '';
+  cards.forEach((c,i) => {
+    const div = document.createElement('div');
+    div.className = 'item';
+    div.innerHTML = `<strong>${c.name}</strong><br><button class="del" onclick="del(${i})">删除</button>`;
+    items.appendChild(div);
   });
 }
 
 function save(){
-  let name = document.getElementById('name').value;
-  let url  = document.getElementById('url').value;
-  let img  = document.getElementById('img').value;
+  const name = document.getElementById('name').value;
+  const url = document.getElementById('url').value;
+  const img = document.getElementById('img').value;
   if(!name||!url||!img) return alert('请填完整');
-  data.push({name,url,img});
-  localStorage.setItem('navData',JSON.stringify(data));
-  render();
-  alert('保存成功！前台刷新就显示！');
+  cards.push({name,url,img});
+  // 这里需要你手动去 GitHub 更新 data.json（因为不能直接写文件）
+  alert('复制下面这段数据，去 GitHub 的 data.json 里粘贴提交，所有人就看到了！\n\n' + JSON.stringify(cards, null, 2));
 }
 
 function del(i){
-  data.splice(i,1);
-  localStorage.setItem('navData',JSON.stringify(data));
-  render();
+  cards.splice(i,1);
+  alert('复制下面这段数据，去 GitHub 的 data.json 里粘贴提交，所有人就看到了！\n\n' + JSON.stringify(cards, null, 2));
 }
 </script>
 </body>
