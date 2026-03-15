@@ -3,50 +3,37 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>导航网站</title>
+<title>导航</title>
 <style>
 *{box-sizing:border-box;margin:0;padding:0;font-family:system-ui}
-body{background:#f5f5f5;padding:20px}
-.container{max-width:800px;margin:0 auto}
-h1{text-align:center;margin-bottom:30px;color:#333}
-.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:20px}
-.card{background:white;border-radius:12px;padding:20px;text-align:center;box-shadow:0 2px 8px rgba(0,0,0,0.1)}
-.card img{width:64px;height:64px;border-radius:8px;margin-bottom:10px}
-.card h3{font-size:16px;margin-bottom:5px;color:#333}
-.card p{font-size:12px;color:#666;margin-bottom:10px}
-.card a{display:inline-block;padding:6px 12px;background:#007bff;color:white;border-radius:6px;text-decoration:none;font-size:12px}
+body{background:#f4f4f4;padding:20px}
+.box{max-width:600px;margin:0 auto;display:grid;grid-template-columns:repeat(3,1fr);gap:15px}
+.item{background:white;padding:15px;border-radius:12px;text-align:center}
+.item img{width:50px;height:50px;border-radius:8px;margin-bottom:8px}
+.item h3{font-size:14px;margin-bottom:5px}
+.item a{font-size:12px;color:#007AFF;text-decoration:none}
 </style>
 </head>
 <body>
-<div class="container">
-  <h1>导航网站</h1>
-  <div class="grid" id="cardGrid"></div>
-</div>
+<div class="box" id="list"></div>
 
 <script>
-async function loadCards(){
-  const grid = document.getElementById("cardGrid");
-  try {
-    const res = await fetch("https://api.github.com/gists/d4a1b2c3e4f5a6b7c8d9e0f1a2b3c4d5");
-    const data = await res.json();
-    const cards = JSON.parse(data.files["data.json"].content);
-    
-    cards.forEach(card => {
-      const div = document.createElement("div");
-      div.className = "card";
-      div.innerHTML = `
-        <img src="${card.img}" alt="${card.name}">
-        <h3>${card.name}</h3>
-        <p>${card.desc}</p>
-        <a href="${card.url}" target="_blank">进入</a>
-      `;
-      grid.appendChild(div);
-    });
-  } catch(e) {
-    grid.innerHTML = "<p>加载失败，请刷新重试</p>";
-  }
+function load(){
+  let list = document.getElementById('list');
+  list.innerHTML = '';
+  let data = JSON.parse(localStorage.getItem('navData') || '[]');
+  data.forEach(item => {
+    let div = document.createElement('div');
+    div.className = 'item';
+    div.innerHTML = `
+      <img src="${item.img}">
+      <h3>${item.name}</h3>
+      <a href="${item.url}" target="_blank">打开</a>
+    `;
+    list.appendChild(div);
+  });
 }
-loadCards();
+load();
 </script>
 </body>
 </html>
