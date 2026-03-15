@@ -72,38 +72,30 @@ body{background:#fff;padding:20px}
 </div>
 
 <script>
-async function loadData(){
-try{
-const res=await fetch('data.json');
-const cards=await res.json();
-const grid=document.getElementById('iconGrid');
-grid.innerHTML='';
-cards.forEach(c=>{
-const item=document.createElement('div');
-item.className='grid-item';
-item.innerHTML=`<img src="${c.img}" alt="${c.name}"><span>${c.name}</span>`;
-grid.appendChild(item);
-});
-}catch(e){
-const defaultCards=[
-{name:"卡片1",img:"https://picsum.photos/70/70?1"},
-{name:"卡片2",img:"https://picsum.photos/70/70?2"},
-{name:"卡片3",img:"https://picsum.photos/70/70?3"},
-{name:"卡片4",img:"https://picsum.photos/70/70?4"},
-{name:"卡片5",img:"https://picsum.photos/70/70?5"},
-{name:"卡片6",img:"https://picsum.photos/70/70?6"},
-{name:"卡片7",img:"https://picsum.photos/70/70?7"},
-{name:"卡片8",img:"https://picsum.photos/70/70?8"}
-];
-const grid=document.getElementById('iconGrid');
-defaultCards.forEach(c=>{
-const item=document.createElement('div');
-item.className='grid-item';
-item.innerHTML=`<img src="${c.img}" alt="${c.name}"><span>${c.name}</span>`;
-grid.appendChild(item);
-});
+function loadData() {
+  const defaultCards = [
+    {name:"卡片1",img:"https://picsum.photos/70/70?1"},
+    {name:"卡片2",img:"https://picsum.photos/70/70?2"},
+    {name:"卡片3",img:"https://picsum.photos/70/70?3"},
+    {name:"卡片4",img:"https://picsum.photos/70/70?4"},
+    {name:"卡片5",img:"https://picsum.photos/70/70?5"},
+    {name:"卡片6",img:"https://picsum.photos/70/70?6"},
+    {name:"卡片7",img:"https://picsum.photos/70/70?7"},
+    {name:"卡片8",img:"https://picsum.photos/70/70?8"}
+  ];
+  const local = localStorage.getItem("cards");
+  const cards = local ? JSON.parse(local) : defaultCards;
+
+  const grid = document.getElementById('iconGrid');
+  grid.innerHTML = '';
+  cards.forEach(c => {
+    const item = document.createElement('div');
+    item.className = 'grid-item';
+    item.innerHTML = `<img src="${c.img}" alt="${c.name}"><span>${c.name}</span>`;
+    grid.appendChild(item);
+  });
 }
-}
+
 loadData();
 </script>
 </body>
