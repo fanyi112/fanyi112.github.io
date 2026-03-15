@@ -11,7 +11,7 @@ body{background:#fff;padding:20px}
 .top-banner .sub-title{font-size:18px;margin-bottom:10px;opacity:.9}
 .top-banner .main-title{font-size:28px;margin-bottom:15px;display:flex;align-items:center;justify-content:center;gap:10px}
 .top-banner .action-btn{background:rgba(0,0,0,.25);color:#fff;padding:12px 35px;border-radius:30px;text-decoration:none;font-size:18px;display:inline-block}
-.voice-tip{background:#f1f3f6;padding:12px 16px;border-radius:12px;margin-bottom:20px;display:flex;align-items:center;gap:10px;font-size:16px;color:#333}
+.voice-tip{background:#f13f6;padding:12px 16px;border-radius:12px;margin-bottom:20px;display:flex;align-items:center;gap:10px;font-size:16px;color:#333}
 .tab-bar{display:flex;background:#f8f9fa;border-radius:12px;padding:8px;margin-bottom:20px}
 .tab-item{flex:1;text-align:center;padding:10px;border-radius:8px;font-size:16px;color:#666;cursor:pointer}
 .tab-item.active{background:linear-gradient(135deg,#ff416c,#ff4b2b);color:#fff}
@@ -72,32 +72,27 @@ body{background:#fff;padding:20px}
 </div>
 
 <script>
-async function loadData() {
-  try {
-    // 从云端读取数据（所有人都能读到）
-    const res = await fetch("https://api.jsonbin.io/v3/b/67e76c24acd98170561a3811/latest", {
-      headers: { "X-Master-Key": "$2b$10$Qn0Aujc3bM5VhA1H3pZ7UuXtQcK1aG5l7L9J8H6G5F4D3S2A1Q0W" }
-    });
-    const data = await res.json();
-    const cards = data.record || [];
-
-    const grid = document.getElementById('iconGrid');
-    grid.innerHTML = '';
-    cards.forEach(c => {
-      const item = document.createElement('div');
-      item.className = 'grid-item';
-      // 保持你原来的点击跳转样式
-      item.innerHTML = `
-        <a href="${c.url}" target="_blank" style="text-decoration:none">
-          <img src="${c.img}" alt="${c.name}">
-          <span>${c.name}</span>
-        </a>
-      `;
-      grid.appendChild(item);
-    });
-  } catch (e) {
-    console.log("加载失败");
-  }
+function loadData() {
+  const defaultCards = [
+    {name:"卡片1",img:"https://picsum.photos/70/70?1",url:"https://www.baidu.com"},
+    {name:"卡片2",img:"https://picsum.photos/70/70?2",url:"https://www.baidu.com"},
+    {name:"卡片3",img:"https://picsum.photos/70/70?3",url:"https://www.baidu.com"},
+    {name:"卡片4",img:"https://picsum.photos/70/70?4",url:"https://www.baidu.com"},
+    {name:"卡片5",img:"https://picsum.photos/70/70?5",url:"https://www.baidu.com"},
+    {name:"卡片6",img:"https://picsum.photos/70/70?6",url:"https://www.baidu.com"},
+    {name:"卡片7",img:"https://picsum.photos/70/70?7",url:"https://www.baidu.com"},
+    {name:"卡片8",img:"https://picsum.photos/70/70?8",url:"https://www.baidu.com"}
+  ];
+  const local = localStorage.getItem("cards");
+  const cards = local ? JSON.parse(local) : defaultCards;
+  const grid = document.getElementById('iconGrid');
+  grid.innerHTML = '';
+  cards.forEach(c => {
+    const item = document.createElement('div');
+    item.className = 'grid-item';
+    item.innerHTML = `<a href="${c.url}" target="_blank" style="text-decoration:none"><img src="${c.img}" alt="${c.name}"><span>${c.name}</span></a>`;
+    grid.appendChild(item);
+  });
 }
 loadData();
 </script>
